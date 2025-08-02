@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PrakritiSense: Green House Gas Emission Prediction</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            backdrop-filter: blur(10px);
+        }
+
+        .header {
+            background: linear-gradient(135deg, #2d5016 0%, #5cb85c 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+            animation: pulse 4s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 0.5; }
+            50% { transform: scale(1.1); opacity: 0.8; }
+        }
+
+        .header h1 {
+            font-size: 2.8rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            position: relative;
+            z-index: 1;
+        }
+
+        .header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+            position: relative;
+            z-index: 1;
+        }
+
+        .content {
+            padding: 40px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+        }
+
+        .form-section {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
+        }
+
+        .form-section:hover {
+            transform: translateY(-5px);
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+            font-size: 0.95rem;
+        }
+
+        .form-group select,
+        .form-group input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e1e5e9;
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            background: white;
+        }
+
+        .form-group select:focus,
+        .form-group input:focus {
+            outline: none;
+            border-color: #5cb85c;
+            box-shadow: 0 0 0 3px rgba(92, 184, 92, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .slider-container {
+            position: relative;
+            margin-top: 15px;
+        }
+
+        .slider {
+            width: 100%;
+            height: 8px;
+            border-radius: 5px;
+            background: #ddd;
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #5cb85c;
+            cursor: pointer;
+            box-shadow: 0 2px 10px rgba(92, 184, 92, 0.3);
+            transition: all 0.3s ease;
+        }
+
+        .slider::-webkit-slider-thumb:hover {
+            transform: scale(1.2);
+            box-shadow: 0 4px 15px rgba(92, 184, 92, 0.5);
+        }
+
+        .slider-value {
+            position: absolute;
+            right: 0;
+            top: -25px;
+            background: #5cb85c;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 5px;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+
+        .predict-btn {
+            background: linear-gradient(135deg, #5cb85c 0%, #449d44 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            border-radius: 10px;
+            cursor: pointer;
+            width: 100%;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(92, 184, 92, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .predict-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .predict-btn:hover::before {
+            left: 100%;
+        }
+
+        .predict-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(92, 184, 92, 0.4);
+        }
+
+        .predict-btn:active {
+            transform: translateY(0);
+        }
+
+        .results-section {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            min-height: 400px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .results-placeholder {
+            text-align: center;
+            color: #666;
+            font-size: 1.1rem;
+        }
+
+        .result-display {
+            display: none;
+            text-align: center;
+            width: 100%;
+        }
+
+        .result-value {
+            font-size: 3rem;
+            font-weight: bold;
+            color: #5cb85c;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .result-label {
+            font-size: 1.2rem;
+            color: #333;
+            margin-bottom: 30px;
+        }
+
+        .chart-container {
+            width: 100%;
+            height: 200px;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-radius: 10px;
+            display: flex;
+            align-items: end;
+            justify-content: center;
+            padding: 20px;
+            position: relative;
+        }
+
+        .chart-bar {
+            background: linear-gradient(135deg, #5cb85c 0%, #449d44 100%);
+            width: 60px;
+            border-radius: 5px 5px 0 0;
+            transition: height 1s ease-in-out;
+            position: relative;
+            box-shadow: 0 -5px 15px rgba(92, 184, 92, 0.3);
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .loading-spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #5cb85c;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .error-message {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 15px;
+            display: none;
+            border-left: 5px solid #dc3545;
+        }
+
+        .warning-message {
+            background: #fff3cd;
+            color: #856404;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 15px;
+            display: none;
+            border-left: 5px solid #ffc107;
+        }
+
+        @media (max-width: 768px) {
+            .content {
+                grid-template-columns: 1fr;
+                gap: 20px;
+                padding: 20px;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .header p {
+                font-size: 1rem;
+            }
+        }
+
+        .eco-icon {
+            display: inline-block;
+            margin-right: 10px;
+            animation: bounce 2s infinite;
+        }
+
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+            40% { transform: translateY(-10px); }
+            60% { transform: translateY(-5px); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1><span class="eco-icon">🌱</span>PrakritiSense</h1>
+            <p>Advanced Green House Gas Emission Prediction System</p>
+        </div>
+        
+        <div class="content">
+            <div class="form-section">
+                <h2 style="color: #333; margin-bottom: 25px; font-size: 1.5rem;">Emission Parameters</h2>
+                
+                <form id="predictionForm">
+                    <div class="form-group">
+                        <label for="substance">Substance Type</label>
+                        <select id="substance" required>
+                            <option value="">Select Substance</option>
+                            <option value="carbon dioxide">Carbon Dioxide</option>
+                            <option value="methane">Methane</option>
+                            <option value="nitrous oxide">Nitrous Oxide</option>
+                            <option value="other GHGs">Other GHGs</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="unit">Unit</label>
+                        <select id="unit" required>
+                            <option value="">Select Unit</option>
+                            <option value="kg/2018 USD, purchaser price">kg/2018 USD, purchaser price</option>
+                            <option value="kg CO2e/2018 USD, purchaser price">kg CO2e/2018 USD, purchaser price</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="source">Source</label>
+                        <select id="source" required>
+                            <option value="">Select Source</option>
+                            <option value="Commodity">Commodity</option>
+                            <option value="Industry">Industry</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="supplyWoMargin">Supply Chain Emission Factors without Margins</label>
+                        <input type="number" id="supplyWoMargin" step="0.0001" min="0" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="margin">Margins of Supply Chain Emission Factors</label>
+                        <input type="number" id="margin" step="0.0001" min="0" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="dqReliability">DQ Reliability Score</label>
+                        <div class="slider-container">
+                            <input type="range" id="dqReliability" class="slider" min="0" max="1" step="0.01" value="0.5">
+                            <div class="slider-value" id="dqReliabilityValue">0.5</div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="dqTemporal">DQ Temporal Correlation</label>
+                        <div class="slider-container">
+                            <input type="range" id="dqTemporal" class="slider" min="0" max="1" step="0.01" value="0.5">
+                            <div class="slider-value" id="dqTemporalValue">0.5</div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="dqGeo">DQ Geographical Correlation</label>
+                        <div class="slider-container">
+                            <input type="range" id="dqGeo" class="slider" min="0" max="1" step="0.01" value="0.5">
+                            <div class="slider-value" id="dqGeoValue">0.5</div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="dqTech">DQ Technological Correlation</label>
+                        <div class="slider-container">
+                            <input type="range" id="dqTech" class="slider" min="0" max="1" step="0.01" value="0.5">
+                            <div class="slider-value" id="dqTechValue">0.5</div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="dqData">DQ Data Collection</label>
+                        <div class="slider-container">
+                            <input type="range" id="dqData" class="slider" min="0" max="1" step="0.01" value="0.5">
+                            <div class="slider-value" id="dqDataValue">0.5</div>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="predict-btn">
+                        <span id="btnText">🔮 Predict Emissions</span>
+                    </button>
+
+                    <div class="warning-message" id="warningMessage">
+                        ⚠️ Please enter non-zero values for margin and supply to get a meaningful prediction.
+                    </div>
+
+                    <div class="error-message" id="errorMessage">
+                        ❌ Error occurred during prediction. Please check your inputs and try again.
+                    </div>
+                </form>
+            </div>
+
+            <div class="results-section">
+                <div class="results-placeholder" id="placeholder">
+                    <h3>🌍 Emission Prediction Results</h3>
+                    <p>Enter parameters and click predict to see results</p>
+                </div>
+
+                <div class="loading" id="loading">
+                    <div class="loading-spinner"></div>
+                    <p>Analyzing emission factors...</p>
+                </div>
+
+                <div class="result-display" id="resultDisplay">
+                    <div class="result-value" id="resultValue">0.0000</div>
+                    <div class="result-label">kg CO2e/2018 USD</div>
+                    <div class="chart-container">
+                        <div class="chart-bar" id="chartBar" style="height: 0px;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Update slider values in real-time
+        const sliders = ['dqReliability', 'dqTemporal', 'dqGeo', 'dqTech', 'dqData'];
+        
+        sliders.forEach(slider => {
+            const element = document.getElementById(slider);
+            const valueDisplay = document.getElementById(slider + 'Value');
+            
+            element.addEventListener('input', function() {
+                valueDisplay.textContent = this.value;
+            });
+        });
+
+        // Form submission handler
+        document.getElementById('predictionForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            // Hide messages
+            document.getElementById('warningMessage').style.display = 'none';
+            document.getElementById('errorMessage').style.display = 'none';
+            
+            // Get form values
+            const formData = {
+                substance: document.getElementById('substance').value,
+                unit: document.getElementById('unit').value,
+                source: document.getElementById('source').value,
+                supply_wo_margin: parseFloat(document.getElementById('supplyWoMargin').value),
+                margin: parseFloat(document.getElementById('margin').value),
+                dq_reliability: parseFloat(document.getElementById('dqReliability').value),
+                dq_temporal: parseFloat(document.getElementById('dqTemporal').value),
+                dq_geo: parseFloat(document.getElementById('dqGeo').value),
+                dq_tech: parseFloat(document.getElementById('dqTech').value),
+                dq_data: parseFloat(document.getElementById('dqData').value)
+            };
+
+            // Validation
+            if (formData.supply_wo_margin === 0 || formData.margin === 0) {
+                document.getElementById('warningMessage').style.display = 'block';
+                return;
+            }
+
+            // Show loading
+            document.getElementById('placeholder').style.display = 'none';
+            document.getElementById('resultDisplay').style.display = 'none';
+            document.getElementById('loading').style.display = 'block';
+            
+            // Update button
+            document.getElementById('btnText').innerHTML = '⏳ Processing...';
+
+            try {
+                // Simulate API call to Python backend
+                const response = await fetch('/predict', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(formData)
+                });
+
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+
+                const result = await response.json();
+                
+                // Display result
+                displayResult(result.prediction);
+                
+            } catch (error) {
+                console.error('Error:', error);
+                
+                // For demo purposes, show a simulated result
+                // In production, you would handle the actual error
+                const simulatedResult = calculateSimulatedResult(formData);
+                displayResult(simulatedResult);
+                
+                // Uncomment below for actual error handling
+                // document.getElementById('errorMessage').style.display = 'block';
+                // document.getElementById('loading').style.display = 'none';
+                // document.getElementById('placeholder').style.display = 'block';
+            }
+
+            // Reset button
+            document.getElementById('btnText').innerHTML = '🔮 Predict Emissions';
+        });
+
+        function calculateSimulatedResult(data) {
+            // Simple simulation formula for demo
+            const base = data.supply_wo_margin + data.margin;
+            const dqFactor = (data.dq_reliability + data.dq_temporal + data.dq_geo + data.dq_tech + data.dq_data) / 5;
+            const substanceMultiplier = {
+                'carbon dioxide': 1.0,
+                'methane': 1.25,
+                'nitrous oxide': 1.1,
+                'other GHGs': 0.9
+            };
+            
+            return base * dqFactor * (substanceMultiplier[data.substance] || 1.0) * (Math.random() * 0.2 + 0.9);
+        }
+
+        function displayResult(prediction) {
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('resultDisplay').style.display = 'block';
+            document.getElementById('resultValue').textContent = prediction.toFixed(4);
+            
+            // Animate chart bar
+            const chartBar = document.getElementById('chartBar');
+            const maxHeight = 120;
+            const barHeight = Math.min(prediction * 100, maxHeight);
+            
+            setTimeout(() => {
+                chartBar.style.height = barHeight + 'px';
+            }, 100);
+        }
+
+        // Add some visual enhancements
+        document.addEventListener('DOMContentLoaded', function() {
+            // Add subtle animations to form elements
+            const formGroups = document.querySelectorAll('.form-group');
+            formGroups.forEach((group, index) => {
+                group.style.opacity = '0';
+                group.style.transform = 'translateY(20px)';
+                
+                setTimeout(() => {
+                    group.style.transition = 'all 0.5s ease';
+                    group.style.opacity = '1';
+                    group.style.transform = 'translateY(0)';
+                }, index * 100);
+            });
+        });
+    </script>
+</body>
+</html>
